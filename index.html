@@ -2,6 +2,7 @@
 <html lang="en-us">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Unity WebGL Player | Bomberman</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
@@ -56,11 +57,11 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/WebGL-wall-fix.loader.js";
+      var loaderUrl = buildUrl + "/WebGL-mobile-responsive-final.loader.js";
       var config = {
-        dataUrl: buildUrl + "/WebGL-wall-fix.data",
-        frameworkUrl: buildUrl + "/WebGL-wall-fix.framework.js",
-        codeUrl: buildUrl + "/WebGL-wall-fix.wasm",
+        dataUrl: buildUrl + "/WebGL-mobile-responsive-final.data",
+        frameworkUrl: buildUrl + "/WebGL-mobile-responsive-final.framework.js",
+        codeUrl: buildUrl + "/WebGL-mobile-responsive-final.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "Bomberman",
@@ -75,23 +76,46 @@
       // the canvas DOM size and WebGL render target sizes yourself.
       // config.matchWebGLToCanvasSize = false;
 
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      // Bomberman responsive mobile canvas
+      function isMobileDevice() {
+        return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+          (navigator.maxTouchPoints > 0 && window.matchMedia('(pointer: coarse)').matches);
+      }
+
+      function resizeMobileCanvas() {
+        var viewport = window.visualViewport;
+        var width = Math.max(1, Math.round(viewport ? viewport.width : window.innerWidth));
+        var height = Math.max(1, Math.round(viewport ? viewport.height : window.innerHeight));
+        container.style.left = Math.round(viewport ? viewport.offsetLeft : 0) + 'px';
+        container.style.top = Math.round(viewport ? viewport.offsetTop : 0) + 'px';
+        container.style.width = width + 'px';
+        container.style.height = height + 'px';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+      }
+
+      function scheduleMobileCanvasResize() {
+        window.requestAnimationFrame(resizeMobileCanvas);
+        window.setTimeout(resizeMobileCanvas, 250);
+      }
+
+      if (isMobileDevice()) {
         // Mobile device style: fill the whole browser client area with the game canvas:
 
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
         container.className = "unity-mobile";
 
         // To lower canvas resolution on mobile devices to gain some
         // performance, uncomment the following line:
         // config.devicePixelRatio = 1;
 
-        canvas.style.width = window.innerWidth + 'px';
-        canvas.style.height = window.innerHeight + 'px';
+        resizeMobileCanvas();
+        window.addEventListener('resize', scheduleMobileCanvasResize, { passive: true });
+        window.addEventListener('orientationchange', scheduleMobileCanvasResize, { passive: true });
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', scheduleMobileCanvasResize, { passive: true });
+          window.visualViewport.addEventListener('scroll', scheduleMobileCanvasResize, { passive: true });
+        }
 
-        unityShowBanner('WebGL builds are not supported on mobile devices.');
       } else {
         // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
 
